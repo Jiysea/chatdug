@@ -2,6 +2,7 @@
 
 namespace App\Http\Livewire\Chat;
 
+use App\Models\Conversation;
 use App\Models\Message;
 use App\Notifications\MessageRead;
 use App\Notifications\MessageSent;
@@ -12,13 +13,40 @@ class ChatBox extends Component
     public $selectedConversation;
     public $body;
     public $loadedMessages;
-
     public $paginate_var = 10;
 
     protected $listeners = [
-        'loadMore'
+        'loadMore', 'conversationSelected'
     ];
 
+    public function conversationSelected($conversationId)
+    {
+        $this->selectedConversation = $conversationId;
+        $this->markAsRead($conversationId);
+    }
+
+    public function markAsRead($conversationId)
+    {
+        $conversation = Conversation::find($conversationId);
+        if ($conversation) {
+            foreach ($conversation->messages as $message) {
+                if ($message->receiver_id == auth()->id() && !$message->read) {
+                    $message->update(['read' => true]);
+                }
+            }
+        }
+        #refresh chatlist
+        $this->emitTo('chat.chat-list', 'refresh'); // Optional: to refresh the chat list if needed
+    }
+
+    // public function markAsRead($conversationId)
+    // {
+    //     $conversation = Conversation::find($conversationId);
+    //     $conversation->markMessagesAsRead(auth()->id());
+
+    //     // Emit an event to refresh the chat list if necessary
+    //     $this->emit('refresh');
+    // }
 
     public function getListeners()
     {
@@ -28,27 +56,21 @@ class ChatBox extends Component
         return [
 
             'loadMore',
-            "echo-private:users.{$auth_id},.Illuminate\\Notifications\\Events\\BroadcastNotificationCreated" => 'broadcastedNotifications'
+            "echo-private:users.{$auth_id},.Illuminate\\Notifications\\Events\\BroadcastNotificationCreated" => 'broadcastedNotifications',
+            // 'echo-private:chat' => 'conversationUpdated', // New listener
 
         ];
     }
 
     public function broadcastedNotifications($event)
     {
-
-
         if ($event['type'] == MessageSent::class) {
-
             if ($event['conversation_id'] == $this->selectedConversation->id) {
-
                 $this->dispatchBrowserEvent('scroll-bottom');
-
                 $newMessage = Message::find($event['message_id']);
-
 
                 #push message
                 $this->loadedMessages->push($newMessage);
-
 
                 #mark as read
                 $newMessage->read_at = now();
@@ -60,9 +82,6 @@ class ChatBox extends Component
             }
         }
     }
-
-
-
 
     public function loadMore(): void
     {
@@ -81,7 +100,7 @@ class ChatBox extends Component
     }
 
 
-    
+
 
     public function loadMessages()
     {
@@ -143,28 +162,22 @@ class ChatBox extends Component
         #push the message
         $this->loadedMessages->push($createdMessage);
 
-
         #update conversation model
         $this->selectedConversation->updated_at = now();
         $this->selectedConversation->save();
-
 
         #refresh chatlist
         $this->emitTo('chat.chat-list', 'refresh');
 
         #broadcast
-
         $this->selectedConversation->getReceiver()
             ->notify(new MessageSent(
                 Auth()->User(),
                 $createdMessage,
                 $this->selectedConversation,
                 $this->selectedConversation->getReceiver()->id
-
             ));
     }
-
-
 
     public function mount()
     {
@@ -176,5 +189,9 @@ class ChatBox extends Component
     public function render()
     {
         return view('livewire.chat.chat-box');
+        // $conversation = Conversation::find($this->selectedConversation);
+        // $messages = $conversation ? $conversation->messages() : collect();
+
+        // return view('livewire.chat.chat-box', ['messages' => $messages]);
     }
 }

@@ -4,6 +4,7 @@ namespace App\Notifications;
 
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
+use Illuminate\Contracts\Broadcasting\ShouldBroadcastNow;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\BroadcastMessage;
 use Illuminate\Notifications\Messages\MailMessage;
@@ -16,10 +17,10 @@ class MessageSent extends Notification implements ShouldBroadcast
     /**
      * Create a new notification instance.
      */
-     public $user;
-     public $message;
-     public $conversation;
-     public $receiverId;
+    public $user;
+    public $message;
+    public $conversation;
+    public $receiverId;
 
     public function __construct(
         $user,
@@ -27,16 +28,13 @@ class MessageSent extends Notification implements ShouldBroadcast
         $conversation,
         $receiverId,
 
-    )
-    {
+    ) {
         //
 
-        $this->user= $user;
-        $this->message= $message;
-        $this->conversation= $conversation;
-        $this->receiverId= $receiverId;
-
-
+        $this->user = $user;
+        $this->message = $message;
+        $this->conversation = $conversation;
+        $this->receiverId = $receiverId;
     }
 
     /**
@@ -52,13 +50,13 @@ class MessageSent extends Notification implements ShouldBroadcast
     /**
      * Get the mail representation of the notification.
      */
-    public function toMail(object $notifiable): MailMessage
-    {
-        return (new MailMessage)
-                    ->line('The introduction to the notification.')
-                    ->action('Notification Action', url('/'))
-                    ->line('Thank you for using our application!');
-    }
+    // public function toMail(object $notifiable): MailMessage
+    // {
+    //     return (new MailMessage)
+    //         ->line('The introduction to the notification.')
+    //         ->action('Notification Action', url('/'))
+    //         ->line('Thank you for using our application!');
+    // }
 
 
     /**
@@ -69,7 +67,7 @@ class MessageSent extends Notification implements ShouldBroadcast
         return new BroadcastMessage([
             'user_id' => $this->user->id,
             'conversation_id' => $this->conversation->id,
-            'message_id' => $this->message->id,   
+            'message_id' => $this->message->id,
             'receiver_id' => $this->receiverId,
         ]);
     }
@@ -80,10 +78,10 @@ class MessageSent extends Notification implements ShouldBroadcast
      *
      * @return array<string, mixed>
      */
-    public function toArray(object $notifiable): array
-    {
-        return [
-            //
-        ];
-    }
+    // public function toArray(object $notifiable): array
+    // {
+    //     return [
+    //         //
+    //     ];
+    // }
 }

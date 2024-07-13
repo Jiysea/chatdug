@@ -1,10 +1,4 @@
-
-## Laravel Livewire Chat Course Demo App
-
-![./cover.jpeg](/cover.jpeg)
-
-
-
+## ChatDug | A Web-Based Chat Messaging App
 
 ## Quick Start
 
