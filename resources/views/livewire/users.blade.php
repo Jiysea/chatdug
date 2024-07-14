@@ -10,8 +10,9 @@
 
                 <div class="flex flex-col items-center pb-10">
 
-                    <img src="https://i.pravatar.cc/150{{ $key }}" alt="image"
-                        class="w-24 h-24 mb-2 5 rounded-full shadow-lg">
+                    {{-- <img src="https://i.pravatar.cc/150{{ $key }}" alt="image"
+                        class="w-24 h-24 mb-2.5 rounded-full shadow-lg"> --}}
+                    <x-avatar class="shrink-0 w-24 h-24 mb-2.5 rounded-full shadow-lg" />
 
                     <h5 class="mb-1 text-xl font-medium text-gray-900 ">
                         {{ $user->name }}
@@ -19,25 +20,16 @@
                     <span class="text-sm text-gray-500">{{ $user->email }} </span>
 
                     <div class="flex mt-4 space-x-3 md:mt-6">
-
-                        <x-secondary-button>
-                            Add Friend
+                        <x-secondary-button wire:click="addToChat({{ $user->id }})">
+                            Add Chat
                         </x-secondary-button>
 
                         <x-primary-button wire:click="message({{ $user->id }})">
                             Message
                         </x-primary-button>
-
                     </div>
-
                 </div>
-
-
             </div>
         @endforeach
     </div>
-
-
-
-
 </div>

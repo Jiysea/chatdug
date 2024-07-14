@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Livewire\Chat;
+namespace App\Http\Livewire;
 
 use Livewire\Component;
 
@@ -8,6 +8,6 @@ class Index extends Component
 {
     public function render()
     {
-        return view('livewire.chat.index');
+        return view('livewire.index');
     }
 }

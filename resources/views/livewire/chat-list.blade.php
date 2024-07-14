@@ -25,11 +25,31 @@ Echo.private('users.{{ Auth()->User()->id }}')
 
         <div class="border-b justify-between flex items-center pb-2">
 
-            <div class="flex items-center gap-2">
-                <h5 class="font-extrabold text-2xl">Chats</h5>
-            </div>
+            <div class="flex lg:hidden items-center">
+                <span class="lg:hidden shrink-0 flex mr-2 items-center">
+                    <a href="{{ route('index') }}">
+                        <x-application-logo class="block h-7 w-auto" />
+                    </a>
+                </span>
 
-            <button>
+                <!-- Navigation Links -->
+                <div class="flex space-x-4 -my-px ml-6 lg:hidden">
+                    <x-nav-link :href="route('index')" :active="request()->routeIs('index')">
+                        {{ __('Chats') }}
+                    </x-nav-link>
+                    <x-nav-link :href="route('users')" :active="request()->routeIs('users')">
+                        {{ __('Users') }}
+                    </x-nav-link>
+                </div>
+            </div>
+            <div class="hidden lg:flex flex-row items-center gap-4 my-1">
+                <h5 class="font-extrabold text-2xl">Chats</h5>
+                <button @click="type='all'" :class="{ 'bg-red-300 border-0 text-white': type == 'all' }"
+                    class="inline-flex justify-center items-center rounded-full gap-x-1 text-xs font-medium px-3 lg:px-5 py-1  lg:py-2.5 border ">
+                    All
+                </button>
+            </div>
+            {{-- useless filter button --}} {{-- <button>
 
                 <svg class="w-7 h-7" xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
                     viewBox="0 0 16 16">
@@ -37,27 +57,19 @@ Echo.private('users.{{ Auth()->User()->id }}')
                         d="M6 10.5a.5.5 0 0 1 .5-.5h3a.5.5 0 0 1 0 1h-3a.5.5 0 0 1-.5-.5zm-2-3a.5.5 0 0 1 .5-.5h7a.5.5 0 0 1 0 1h-7a.5.5 0 0 1-.5-.5zm-2-3a.5.5 0 0 1 .5-.5h11a.5.5 0 0 1 0 1h-11a.5.5 0 0 1-.5-.5z" />
                 </svg>
 
-            </button>
-
+            </button> --}}
         </div>
 
         {{-- Filters --}}
 
-        <div class="flex gap-3 items-center overflow-x-scroll no-scrollbar p-2 bg-white">
-
-            <button @click="type='all'" :class="{ 'bg-blue-100 border-0 text-black': type == 'all' }"
-                class="inline-flex justify-center items-center rounded-full gap-x-1 text-xs font-medium px-3 lg:px-5 py-1  lg:py-2.5 border ">
-                All
-            </button>
-            <button @click="type='deleted'" :class="{ 'bg-blue-100 border-0 text-black': type == 'deleted' }"
+        {{-- <div class="flex gap-3 items-center overflow-x-scroll no-scrollbar p-2 bg-white"> --}}
+        {{-- <button @click="type='deleted'" :class="{ 'bg-blue-100 border-0 text-black': type == 'deleted' }"
                 class="inline-flex justify-center items-center rounded-full gap-x-1 text-xs font-medium px-3 lg:px-5 py-1  lg:py-2.5 border ">
                 Deleted
-            </button>
-
-        </div>
+            </button> --}}
+        {{-- </div> --}}
 
     </header>
-
 
     <main class=" overflow-y-scroll no-scrollbar overflow-hidden grow  h-full relative " style="contain:content">
 
@@ -70,39 +82,57 @@ Echo.private('users.{{ Auth()->User()->id }}')
                 @foreach ($conversations as $key => $conversation)
                     {{-- <div x-data="{ error: null }" x-on:click.away="error = null"> --}}
                     <li id="conversation-{{ $conversation->id }}" wire:key="{{ $conversation->id }}"
-                        @click.away="error = null" wire:click="selectConversation('{{ $conversation->id }}')"
-                        class="py-3 hover:bg-gray-50 rounded-xl transition-colors duration-150 flex gap-4 relative w-full cursor-pointer px-2 {{ $conversation->id == session()->get('selectedConversation') ? 'bg-gray-100/70' : '' }}">
-                        <a href="#" class="shrink-0">
-                            <x-avatar src="https://i.pravatar.cc/150{{ $key }}" />
-                        </a>
+                        class="my-1 py-3 hover:bg-gray-50 rounded-xl transition-colors duration-150 flex gap-4 relative w-full cursor-pointer px-2 {{ $conversation->id == $conversation_id ? 'bg-gray-100/70' : '' }}">
 
-                        <aside class="grid grid-cols-12 w-full">
+                        <aside class="grid grid-cols-12 w-full items-center justify-center">
 
-                            <a href="{{ route('chat', $conversation->id) }}"
+                            <a wire:click="selectConversation({{ $conversation->id }})"
+                                href="{{ route('chat', $conversation->id) }}"
                                 class="col-span-11 border-b pb-2 border-gray-200 relative overflow-hidden truncate leading-5 w-full flex-nowrap p-1">
 
-                                {{-- name and date  --}}
-                                <div class="flex justify-between w-full items-center">
 
-                                    <h6 class="truncate font-medium tracking-wider text-gray-900">
-                                        {{ $conversation->getReceiver()->name }}
-                                    </h6>
+                                {{-- name, avatar, and date  --}}
+                                <div class="flex justify-between items-center mb-2">
+
+                                    <span class="flex flex-row items-center gap-2 justify-center">
+                                        {{-- <x-avatar src="https://i.pravatar.cc/150{{ $key }}" /> --}}
+                                        <x-avatar class="shrink-0 mx-4 md:mx-0 h-6 w-6 lg:w-9 lg:h-9" />
+                                        @if ($conversation->messages?->last()?->receiver_id == auth()->id())
+                                            @if ($conversation->isLastMessageReadByUser())
+                                                <h6 class="truncate font-[100] tracking-wider text-gray-900">
+                                                    {{ $conversation->getReceiver()->name }}
+                                                </h6>
+                                            @else
+                                                <h6 class="truncate font-bold tracking-wider text-gray-900">
+                                                    {{ $conversation->getReceiver()->name }}
+                                                </h6>
+                                            @endif
+                                        @else
+                                            <h6 class="truncate font-[100] text-gray-900">
+                                                {{ $conversation->getReceiver()->name }}
+                                            </h6>
+                                        @endif
+                                    </span>
 
                                     <small
-                                        class="text-gray-700">{{ $conversation->messages?->last()?->created_at?->shortAbsoluteDiffForHumans() }}
+                                        class="text-gray-700">{{ $conversation->messages?->last()?->created_at?->format('g:i') }}
                                     </small>
 
                                 </div>
 
                                 {{-- Message body --}}
-
-
                                 <div class="flex gap-x-2 items-center">
 
+                                    {{-- Sender View --}}
                                     @if ($conversation->messages?->last()?->sender_id == auth()->id())
                                         @if ($conversation->isLastMessageReadByUser())
+                                            {{-- The Message --}}
+                                            <p class="grow truncate text-sm ml-4 md:ml-0 text-gray-500 font-[100]">
+                                                You: {{ $conversation->messages?->last()?->body ?? ' ' }}
+                                            </p>
+
                                             {{-- double tick  --}}
-                                            <span class="text-gray-500">
+                                            <span class="text-red-500">
                                                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16"
                                                     fill="currentColor" class="bi bi-check-circle-fill"
                                                     viewBox="0 0 16 16">
@@ -111,8 +141,13 @@ Echo.private('users.{{ Auth()->User()->id }}')
                                                 </svg>
                                             </span>
                                         @else
+                                            {{-- The Message --}}
+                                            <p class="grow truncate text-sm ml-4 md:ml-0 text-gray-500 font-[100]">
+                                                You: {{ $conversation->messages?->last()?->body ?? ' ' }}
+                                            </p>
+
                                             {{-- single tick  --}}
-                                            <span class="text-gray-500">
+                                            <span class="text-red-500">
                                                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16"
                                                     fill="currentColor" class="bi bi-check-circle" viewBox="0 0 16 16">
                                                     <path
@@ -122,19 +157,24 @@ Echo.private('users.{{ Auth()->User()->id }}')
                                                 </svg>
                                             </span>
                                         @endif
+
+                                        {{-- Receiver View --}}
+                                    @elseif ($conversation->messages?->last()?->receiver_id == auth()->id())
+                                        @if ($conversation->isLastMessageReadByUser())
+                                            <p class="grow truncate text-sm ml-4 md:ml-0 text-gray-500 font-[100]">
+                                                {{ $conversation->messages?->last()?->body ?? ' ' }}
+                                            </p>
+                                        @else
+                                            <p class="grow truncate text-sm ml-4 md:ml-0 text-red-800 font-bold">
+                                                {{ $conversation->messages?->last()?->body ?? ' ' }}
+                                            </p>
+                                        @endif
                                     @endif
-
-
-
-
-                                    <p class="grow truncate text-sm font-[100]">
-                                        {{ $conversation->messages?->last()?->body ?? ' ' }}
-                                    </p>
 
                                     {{-- unread count --}}
                                     @if ($conversation->unreadMessagesCount() > 0)
                                         <span
-                                            class="font-bold p-px px-2 text-xs shrink-0 rounded-full bg-blue-500 text-white">
+                                            class="font-bold p-px px-2 text-xs shrink-0 rounded-full bg-red-500 text-white">
                                             {{ $conversation->unreadMessagesCount() }}
                                         </span>
                                     @endif
@@ -142,37 +182,27 @@ Echo.private('users.{{ Auth()->User()->id }}')
 
                                 </div>
 
-
-
                             </a>
 
                             {{-- Dropdown --}}
-
                             <div class="col-span-1 flex flex-col text-center my-auto">
-
                                 <x-dropdown align="right" width="48">
                                     <x-slot name="trigger">
                                         <button>
-
                                             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16"
                                                 fill="currentColor"
-                                                class="bi bi-three-dots-vertical w-7 h-7 text-gray-700"
+                                                class="bi bi-three-dots-vertical w-4 h-4 text-gray-700"
                                                 viewBox="0 0 16 16">
                                                 <path
                                                     d="M9.5 13a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0zm0-5a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0zm0-5a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0z" />
                                             </svg>
-
-
                                         </button>
                                     </x-slot>
 
                                     <x-slot name="content">
-
                                         <div class="w-full p-1">
-
-                                            <button
+                                            {{-- <button
                                                 class="items-center gap-3 flex w-full px-4 py-2 text-left text-sm leading-5 text-gray-500 hover:bg-gray-100 transition-all duration-150 ease-in-out focus:outline-none focus:bg-gray-100">
-
                                                 <span>
                                                     <svg xmlns="http://www.w3.org/2000/svg" width="16"
                                                         height="16" fill="currentColor" class="bi bi-person-circle"
@@ -185,11 +215,11 @@ Echo.private('users.{{ Auth()->User()->id }}')
 
                                                 View Profile
 
-                                            </button>
+                                            </button> --}}
+
                                             <button onclick="confirm('Are you sure?')||event.stopImmediatePropagation()"
                                                 wire:click="deleteByUser('{{ encrypt($conversation->id) }}')"
                                                 class="items-center gap-3 flex w-full px-4 py-2 text-left text-sm leading-5 text-gray-500 hover:bg-gray-100 transition-all duration-150 ease-in-out focus:outline-none focus:bg-gray-100">
-
                                                 <span>
                                                     <svg xmlns="http://www.w3.org/2000/svg" width="16"
                                                         height="16" fill="currentColor" class="bi bi-trash-fill"
@@ -202,19 +232,10 @@ Echo.private('users.{{ Auth()->User()->id }}')
                                                 Delete
 
                                             </button>
-
-
-
                                         </div>
-
                                     </x-slot>
                                 </x-dropdown>
-
-
-
                             </div>
-
-
                         </aside>
                     </li>
                     {{-- <div style="display:none" x-show="error" class="text-red-500">

@@ -67,7 +67,8 @@ class Conversation extends Model
         $lastMessage = $this->messages()->latest()->first();
 
         if ($lastMessage) {
-            return  $lastMessage->read_at !== null && $lastMessage->sender_id == $user->id;
+            // return  $lastMessage->read_at !== null && $lastMessage->sender_id == $user->id;
+            return  $lastMessage->read_at !== null;
         }
     }
     public function unreadMessagesCount(): int

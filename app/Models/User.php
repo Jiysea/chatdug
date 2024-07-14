@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Conversation;
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
@@ -46,8 +47,8 @@ class User extends Authenticatable
 
     public function conversations()
     {
-        
-        return $this->hasMany(Conversation::class,'sender_id')->orWhere('receiver_id',$this->id)->whereNotDeleted();
+
+        return $this->hasMany(Conversation::class, 'sender_id')->orWhere('receiver_id', $this->id)->whereNotDeleted();
     }
 
     /**
@@ -55,7 +56,6 @@ class User extends Authenticatable
      */
     public function receivesBroadcastNotificationsOn(): string
     {
-        return 'users.'.$this->id;
+        return 'users.' . $this->id;
     }
-
 }
