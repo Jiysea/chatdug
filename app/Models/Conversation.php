@@ -24,7 +24,7 @@ class Conversation extends Model
         return $this->hasMany(Message::class);
     }
 
-    public function getReceiver()
+    public function getConversationUser()
     {
 
         if ($this->sender_id === auth()->id()) {
@@ -68,13 +68,11 @@ class Conversation extends Model
 
         if ($lastMessage) {
             // return  $lastMessage->read_at !== null && $lastMessage->sender_id == $user->id;
-            return  $lastMessage->read_at !== null;
+            return $lastMessage->read_at !== null;
         }
     }
     public function unreadMessagesCount(): int
     {
-
-
         return $unreadMessages = Message::where('conversation_id', '=', $this->id)
             ->where('receiver_id', auth()->user()->id)
             ->whereNull('read_at')->count();

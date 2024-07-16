@@ -1,53 +1,40 @@
-<div x-data="{ height: 0, conversationElement: document.getElementById('conversation'), markAsRead: null }" x-init="height = conversationElement.scrollHeight;
-$nextTick(() => conversationElement.scrollTop = height);
-
-Echo.private('users.{{ Auth()->User()->id }}')
-    .notification((notification) => {
-        if (notification['type'] == 'App\\Notifications\\MessageRead' && notification['conversation_id'] == {{ $conversation_id }}) {
-            markAsRead = true;
-        }
-    });"
-    @scroll-bottom.window = "$nextTick(()=> conversationElement.scrollTop= conversationElement.scrollHeight);"
-    class="w-full overflow-hidden">
+<div class="w-full overflow-hidden">
     <div class="border-b flex flex-col overflow-y-scroll no-scrollbar grow h-full">
 
         {{-- header --}}
-        <header class="w-full sticky inset-x-0 flex pb-[5px] pt-[5px] top-0 z-10 bg-white border-b ">
-            <div class="flex w-full items-center px-2 lg:px-4 gap-2 md:gap-5">
+        <header class="w-full inset-x-0 flex py-2 top-0 z-10 bg-white border-b ">
+            <div class="flex w-full items-center px-4 gap-2 md:gap-5">
                 <a class="shrink-0 md:hidden" href="{{ route('index') }}">
                     {{-- Arrow --}}
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
-                        stroke="currentColor" class="w-6 h-6">
+                        stroke="currentColor" class="stroke-red-600 w-6 h-6">
                         <path stroke-linecap="round" stroke-linejoin="round"
                             d="M19.5 12h-15m0 0l6.75 6.75M4.5 12l6.75-6.75" />
                     </svg>
                 </a>
 
                 {{-- avatar --}}
-                <div class="shrink-0">
-                    <x-avatar class="h-9 w-9 lg:w-11 lg:h-11" />
+                <div class="shrink-0 flex items-center justify-center">
+                    <x-avatar class="h-8 w-8 sm:w-9 sm:h-9" />
                 </div>
 
                 <h6 class="font-bold truncate"> {{ $this->loadSenderName() }} </h6>
             </div>
         </header>
 
-
         {{-- body --}}
-        <main
-            @scroll="
-            scropTop = $el.scrollTop;
-            if(scropTop <= 0){
-            window.livewire.emit('loadMore');
-            }"
-            @update-chat-height.window="
-            newHeight= $el.scrollHeight;
-            oldHeight= height;
-            $el.scrollTop= newHeight- oldHeight;
-            height=newHeight;"
-            id="conversation"
-            class="flex flex-col gap-3 p-2.5 overflow-y-auto  flex-grow overscroll-contain overflow-x-hidden w-full my-auto">
-
+        <main x-data @scroll="if($el.scrollTop<=0){window.livewire.emit('loadMore');}" id="chat-box"
+            class="flex flex-col gap-3 p-2.5 overflow-y-auto flex-grow overscroll-contain overflow-x-hidden w-full my-auto">
+            <div class="fixed inset-x-1/2 top-20 md:top-24" wire:loading.delay>
+                <svg class="w-8 h-8 md:w-10 md:h-10 mr-3 -ml-1 text-red-500 animate-spin"
+                    xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor"
+                        stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor"
+                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
+                    </path>
+                </svg>
+            </div>
             @if ($loadedMessages)
 
                 @php
@@ -134,10 +121,7 @@ Echo.private('users.{{ Auth()->User()->id }}')
                     </div>
                 @endforeach
             @endif
-
         </main>
-
-
 
         {{-- send message input box  --}}
 
@@ -145,33 +129,28 @@ Echo.private('users.{{ Auth()->User()->id }}')
 
             <div class=" p-2 border-t">
 
-                <form x-data="{ body: @entangle('body').defer }" @submit.prevent="$wire.sendMessage" method="POST" autocapitalize="off">
+                <form wire:submit.prevent="sendMessage" method="POST" autocapitalize="off">
                     @csrf
 
                     <input type="hidden" autocomplete="false" style="display:none">
 
                     <div class="grid grid-cols-12">
-                        <input x-model="body" type="text" autocomplete="off" autofocus placeholder="Message"
-                            maxlength="1700"
-                            class="col-span-11 bg-gray-200 border-0 outline-0 focus:border-0 focus:ring-0 hover:ring-0 rounded-lg focus:outline-none">
+                        <input id="bodyInput" oninput="checkIfBodyIsEmpty()" wire:model.lazy="body" type="text"
+                            autocomplete="off" autofocus placeholder="Message" maxlength="1700"
+                            class="col-span-10 md:col-span-11 bg-gray-200 border-0 outline-0 focus:border-0 focus:ring-0 hover:ring-0 rounded-lg focus:outline-none">
 
-                        <button x-bind:disabled="!body.trim()"
-                            :class="{
-                                'bg-gray-200 text-black translate ease-in-out duration-150': !body.trim(),
-                                'bg-red-500 text-gray-200 hover:bg-red-600 focus:outline-none focus:ring-0 focus:ring-offset-0 translate ease-in-out duration-150': body
-                                    .trim()
-                            }"
-                            class="bg-gray-200 text-black col-span-1 rounded-md mx-2 shadow-sm" type='submit'>
+                        <button id = "sendButton" disabled
+                            class="bg-gray-200 text-black translate ease-in-out duration-150 col-span-2 md:col-span-1 rounded-md mx-2 shadow-sm"
+                            type='submit'>
                             <span class="items-center justify-center flex flex-row ">
                                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
                                     stroke-width="1.5" stroke="currentColor" class="h-5 w-5 shrink-0">
                                     <path stroke-linecap="round" stroke-linejoin="round"
                                         d="M6 12 3.269 3.125A59.769 59.769 0 0 1 21.485 12 59.768 59.768 0 0 1 3.27 20.875L5.999 12Zm0 0h7.5" />
                                 </svg>
-                            </span></button>
-
+                            </span>
+                        </button>
                     </div>
-
                 </form>
 
                 @error('body')
@@ -181,4 +160,80 @@ Echo.private('users.{{ Auth()->User()->id }}')
             </div>
         </footer>
     </div>
+    {{-- @if (!trim($body)) disabled @endif
+                            class="{{ !trim($body);
+                                ? 'bg-gray-200 text-black translate ease-in-out duration-150 col-span-2 md:col-span-1 rounded-md mx-2 shadow-sm'
+                                : 'bg-red-500 text-gray-200 hover:bg-red-600 focus:outline-none focus:ring-0 focus:ring-offset-0 translate ease-in-out duration-150 col-span-2 md:col-span-1 rounded-md mx-2 shadow-sm' }}" --}}
+
+    <script>
+        // var messageBody = '';
+
+
+        function checkIfBodyIsEmpty() {
+            var bodyInput = document.getElementById('bodyInput');
+            var sendButton = document.getElementById('sendButton');
+
+            // Check if the Input body is empty
+            if (!bodyInput.value.trim()) {
+                sendButton.disabled = true;
+                sendButton.className =
+                    "bg-gray-200 text-black translate ease-in-out duration-150 col-span-2 md:col-span-1 rounded-md mx-2 shadow-sm";
+            } else {
+                sendButton.disabled = false;
+                sendButton.className =
+                    "bg-red-500 text-gray-200 hover:bg-red-600 focus:outline-none focus:ring-0 focus:ring-offset-0 translate ease-in-out duration-150 col-span-2 md:col-span-1 rounded-md mx-2 shadow-sm";
+            }
+
+            // Check if Enter key is pressed and the button is disabled
+            // if (event.key === 'Enter' && sendButton.disabled) {
+            //     event.preventDefault(); // Prevent form submission
+            //     return false; // Exit function
+            // }
+        }
+        document.addEventListener('DOMContentLoaded', function() {
+            var chatBox = document.getElementById('chat-box');
+            var height = chatBox.scrollHeight;
+
+            // Scroll to the bottom initially
+            chatBox.scrollTop = chatBox.scrollHeight;
+
+            Livewire.hook('message.processed', (message, component) => {
+                if (component.el.id === 'chat-box') {
+                    var newHeight = chatBox.scrollHeight;
+                    var oldHeight = height;
+
+                    // If a new message was added by the current user, scroll to the bottom
+                    if (message.updateQueue[0].type === 'callMethod' && message.updateQueue[0].payload
+                        .method === 'sendMessage') {
+                        chatBox.scrollTop = newHeight;
+                    } else {
+                        chatBox.scrollTop = newHeight - oldHeight;
+                    }
+                    height = newHeight;
+                }
+            });
+
+            window.addEventListener('scrollToBottom', function() {
+                chatBox.scrollTop = chatBox.scrollHeight;
+            });
+
+            window.addEventListener('updateChatHeight', function() {
+                var newHeight = chatBox.scrollHeight;
+                var oldHeight = height;
+                chatBox.scrollTop = newHeight - oldHeight;
+                height = newHeight;
+            });
+
+            Echo.private('users.{{ Auth()->user()->id }}')
+                .notification((notification) => {
+                    Livewire.emit('handleNotification', notification);
+                });
+
+            Echo.private('conversation.{{ $this->conversation_id }}')
+                .listen('ConversationSelected', (e) => {
+                    Livewire.emit('handleConversationRead', e);
+                });
+        });
+    </script>
+
 </div>

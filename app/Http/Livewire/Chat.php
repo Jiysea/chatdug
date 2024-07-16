@@ -14,17 +14,16 @@ class Chat extends Component
     public function mount($query)
     {
         $conversation = Conversation::findOrFail($query);
-
-
-        if (!$conversation && (
-            !$conversation->sender_id === auth()->id() ||
-            !$conversation->receiver_id === auth()->id()
-        )) {
+        if (
+            !$conversation ||
+            !($conversation->sender_id === auth()->id() ||
+                !$conversation->receiver_id === auth()->id())
+        ) {
             // User is not a participant, redirect to general chat
             return redirect()->route('index');
         }
 
-        #pass the conversation to the selectedConversation
+        #pass the conversation to the conversation_id
         $this->conversation_id = $query;
 
         #mark message belonging to receiver as read 

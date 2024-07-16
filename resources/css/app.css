@@ -1,3 +1,36 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* width */
+::-webkit-scrollbar {
+    width: 5px;
+}
+
+/* Track */
+::-webkit-scrollbar-track {
+    background: #fdf1ef;
+}
+
+/* Handle */
+::-webkit-scrollbar-thumb {
+    background: #a22c24;
+    border-radius: 5px;
+}
+
+/* Handle on hover */
+::-webkit-scrollbar-thumb:hover {
+    background: #6c1d18;
+}
+
+/* SOmething something fade delay */
+.fade-enter-active,
+.fade-leave-active {
+    transition: opacity 0.5s;
+}
+
+/* Something something opacity */
+.fade-enter,
+.fade-leave-to {
+    opacity: 0;
+}

@@ -4,48 +4,60 @@ namespace App\Http\Livewire;
 
 use App\Events\ConversationSelected;
 use App\Models\Conversation;
+use App\Models\Message;
 use App\Notifications\MessageRead;
+use App\Notifications\MessageSent;
 use Livewire\Component;
 
 class ChatList extends Component
 {
     public $conversation_id;
-    protected $listeners = ['refresh' => '$refresh', 'refreshChatList' => '$refresh', 'selectConversation'];
+    public $conversations;
+    // public $selectedConversation;
+
+    protected $listeners = ['refresh' => '$refresh', 'refreshChatList', 'selectConversation'];
 
     public function mount()
     {
-        $conversation_id = $this->conversation_id;
-        event(new ConversationSelected($conversation_id));
-        // $this->emit('conversationSelected', $conversation_id);
-
-        $conversation = Conversation::find($conversation_id);
-        if ($conversation && $conversation->unreadMessagesCount(auth()->id()) > 0) {
-            $conversation->markMessagesAsRead(auth()->id());
-            $conversation->getReceiver()->notify(new MessageRead($conversation)); // Notify Sender
-        }
+        // $this->selectConversation($this->conversation_id);
+        $this->conversations = Conversation::where('receiver_id', auth()->id())
+            ->orWhere('sender_id', auth()->id())
+            ->get();
     }
-
-    // public function markAsRead()
-    // {
-    //     $conversation_id = $this->conversation_id;
-    //     $conversation = Conversation::find($conversation_id);
-    //     if ($conversation && $conversation->unreadMessagesCount(auth()->id()) > 0) {
-    //         $conversation->markMessagesAsRead(auth()->id());
-    //         $conversation->getReceiver()->notify(new MessageRead($conversation)); // Notify Sender
-    //     }
-    // }
 
     public function selectConversation($conversation_id)
     {
-        $this->conversation_id = $conversation_id;
-        // dd($conversation_id);
-        event(new ConversationSelected($conversation_id));
-        // $this->emit('conversationSelected', $conversation_id);
 
-        $conversation = Conversation::findOrFail($conversation_id);
-        if ($conversation && $conversation->unreadMessagesCount(auth()->id()) > 0) {
-            $conversation->markMessagesAsRead(auth()->id());
-            $conversation->getReceiver()->notify(new MessageRead($conversation)); // Notify Sender
+        $this->conversation_id = $conversation_id;
+
+        // Mark the conversation as read
+        $conversation = Conversation::find($conversation_id);
+        if ($conversation) {
+            // Mark the messages as read (update your logic as needed)
+            $conversation->messages()->where('receiver_id', auth()->id())->update(['read_at' => now()]);
+            $conversation->getConversationUser()->notify(new MessageRead($conversation)); // Notify Sender
+
+            // Broadcast the event
+            broadcast(new ConversationSelected($conversation_id, auth()->id()));
+        }
+    }
+
+    public function refreshChatList($notification)
+    {
+        if ($notification['type'] == MessageSent::class || $notification['type'] == MessageRead::class) {
+            if ($notification['conversation_id'] == $this->conversation_id) {
+
+                $this->emitTo('chat-list', 'refresh');
+            }
+        }
+    }
+
+    public function removeSuccessMessage($sessionMessage, $index)
+    {
+        $messages = session()->get($sessionMessage, []);
+        if (isset($messages[$index])) {
+            unset($messages[$index]);
+            session()->put($sessionMessage, array_values($messages));
         }
     }
 
@@ -75,22 +87,22 @@ class ChatList extends Component
                     ->orWhereNull('receiver_deleted_at');
             })->doesntExist();
 
-
-
         if ($receiverAlsoDeleted) {
 
             $conversation->forceDelete();
         }
+
+        $messages = session()->get('deleteChatSuccess', []);
+        $messages[] = 'Chat conversation has been deleted.';
+        session()->put('deleteChatSuccess', $messages);
+
         return redirect(route('index'));
     }
 
-
-
     public function render()
     {
-        $user = auth()->user();
         return view('livewire.chat-list', [
-            'conversations' => $user->conversations()->latest('updated_at')->get()
+            'conversations' => $this->conversations,
         ]);
     }
 }

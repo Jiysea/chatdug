@@ -64,8 +64,8 @@
 
             <div>
                 <h1 class="max-w-3xl mx-auto text-5xl font-bold text-center md:text-6xl lg:text-7xl">
-                    Messaging App
-                    <span class="text-red-500">for Single Students</span>
+                    A Messaging App for
+                    <span class="text-red-500"> University</span> <span class="text-red-700">Students</span>
                 </h1>
             </div>
 
@@ -217,7 +217,7 @@
 
                 <div class="ml-4 text-center text-sm text-gray-500 sm:text-right sm:ml-0">
                     {{-- Laravel v{{ Illuminate\Foundation\Application::VERSION }} (PHP v{{ PHP_VERSION }}) --}}
-                    &#169 All rights reserved 2024. (build v0.2)
+                    &#169 All rights reserved 2024. (build v0.3)
                 </div>
             </div>
         </div>

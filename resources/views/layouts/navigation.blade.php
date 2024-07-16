@@ -1,12 +1,20 @@
 <nav x-data="{ open: false }" class="bg-white border-b border-gray-100">
+    {{-- Sidebar Navigation Menu --}}
+    @include('livewire.sidebar')
+    {{-- background dim --}}
+    <div x-on:click($wire.set('open', false)) :class="{ 'block': open, 'hidden': !open }"
+        class="fixed inset-0 z-20 bg-black opacity-50 hidden"></div>
     <!-- Primary Navigation Menu -->
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="flex justify-between h-16">
             <div class="flex">
                 <!-- Logo -->
-                <div class="shrink-0 flex items-center">
-                    <a href="{{ route('index') }}">
+                <div class="flex items-center">
+                    <a href="{{ route('index') }}" class="shrink-0 flex flex-row items-center">
                         <x-application-logo class="block h-9 w-auto" />
+
+                        <p class="flex font-bold text-lg text-red-500 ml-3">Chat<span class="text-red-700">Dug</span>
+                        </p>
                     </a>
                 </div>
 
@@ -76,15 +84,20 @@
     </div>
 
     <!-- Responsive Navigation Menu -->
-    <div :class="{ 'block': open, 'hidden': !open }" class="hidden sm:hidden">
+    {{-- <div :class="{ 'block': open, 'hidden': !open }" class="hidden sm:hidden">
+        <div class="pt-2 pb-3 space-y-1">
+            <x-responsive-nav-link :href="route('index')" :active="request()->routeIs('index')">
+                {{ __('Chats') }}
+            </x-responsive-nav-link>
+        </div>
         <div class="pt-2 pb-3 space-y-1">
             <x-responsive-nav-link :href="route('users')" :active="request()->routeIs('users')">
                 {{ __('Users') }}
             </x-responsive-nav-link>
-        </div>
+        </div> --}}
 
-        <!-- Responsive Settings Options -->
-        <div class="pt-4 pb-1 border-t border-gray-200">
+    <!-- Responsive Settings Options -->
+    {{-- <div class="pt-4 pb-1 border-t border-gray-200">
             <div class="px-4">
                 <div class="font-medium text-base text-gray-800">{{ Auth::user()->name }}</div>
                 <div class="font-medium text-sm text-gray-500">{{ Auth::user()->email }}</div>
@@ -92,7 +105,7 @@
 
             <div class="mt-3 space-y-1">
                 <x-responsive-nav-link :href="route('profile.edit')">
-                    {{ __('Profile') }}
+                    {{ __('Edit Profile') }}
                 </x-responsive-nav-link>
 
                 <!-- Authentication -->
@@ -106,6 +119,6 @@
                     </x-responsive-nav-link>
                 </form>
             </div>
-        </div>
-    </div>
+        </div> 
+    </div> --}}
 </nav>

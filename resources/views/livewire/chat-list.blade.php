@@ -1,73 +1,13 @@
-<div x-data="{
-    type: 'all',
-    query: @entangle('query'),
-    markAsRead(conversationId) {
-        @this.call('markAsRead', conversationId);
-    }
-}" x-init="setTimeout(() => {
-    conversationElement = document.getElementById('conversation-' + query);
+<div class="flex flex-col transition-all h-full overflow-hidden">
 
-    //scroll to the element
-    if (conversationElement) {
-        conversationElement.scrollIntoView({ 'behavior': 'smooth' });
-    }
-}, 200);
+    <header class="px-3 z-10 bg-white top-0 w-full py-2 border-b">
+        <div class="justify-between flex items-center">
 
-Echo.private('users.{{ Auth()->User()->id }}')
-    .notification((notification) => {
-        if (notification['type'] == 'App\\Notifications\\MessageRead' || notification['type'] == 'App\\Notifications\\MessageSent') {
-
-            window.Livewire.emit('refresh');
-        }
-    });" class="flex flex-col transition-all h-full overflow-hidden">
-
-    <header class="px-3 z-10 bg-white sticky top-0 w-full py-2">
-
-        <div class="border-b justify-between flex items-center pb-2">
-
-            <div class="flex lg:hidden items-center">
-                <span class="lg:hidden shrink-0 flex mr-2 items-center">
-                    <a href="{{ route('index') }}">
-                        <x-application-logo class="block h-7 w-auto" />
-                    </a>
-                </span>
-
-                <!-- Navigation Links -->
-                <div class="flex space-x-4 -my-px ml-6 lg:hidden">
-                    <x-nav-link :href="route('index')" :active="request()->routeIs('index')">
-                        {{ __('Chats') }}
-                    </x-nav-link>
-                    <x-nav-link :href="route('users')" :active="request()->routeIs('users')">
-                        {{ __('Users') }}
-                    </x-nav-link>
-                </div>
+            <div class="flex flex-row items-center gap-4 my-1">
+                <h5 class="font-extrabold text-xl ml-2">Chats</h5>
             </div>
-            <div class="hidden lg:flex flex-row items-center gap-4 my-1">
-                <h5 class="font-extrabold text-2xl">Chats</h5>
-                <button @click="type='all'" :class="{ 'bg-red-300 border-0 text-white': type == 'all' }"
-                    class="inline-flex justify-center items-center rounded-full gap-x-1 text-xs font-medium px-3 lg:px-5 py-1  lg:py-2.5 border ">
-                    All
-                </button>
-            </div>
-            {{-- useless filter button --}} {{-- <button>
 
-                <svg class="w-7 h-7" xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
-                    viewBox="0 0 16 16">
-                    <path
-                        d="M6 10.5a.5.5 0 0 1 .5-.5h3a.5.5 0 0 1 0 1h-3a.5.5 0 0 1-.5-.5zm-2-3a.5.5 0 0 1 .5-.5h7a.5.5 0 0 1 0 1h-7a.5.5 0 0 1-.5-.5zm-2-3a.5.5 0 0 1 .5-.5h11a.5.5 0 0 1 0 1h-11a.5.5 0 0 1-.5-.5z" />
-                </svg>
-
-            </button> --}}
         </div>
-
-        {{-- Filters --}}
-
-        {{-- <div class="flex gap-3 items-center overflow-x-scroll no-scrollbar p-2 bg-white"> --}}
-        {{-- <button @click="type='deleted'" :class="{ 'bg-blue-100 border-0 text-black': type == 'deleted' }"
-                class="inline-flex justify-center items-center rounded-full gap-x-1 text-xs font-medium px-3 lg:px-5 py-1  lg:py-2.5 border ">
-                Deleted
-            </button> --}}
-        {{-- </div> --}}
 
     </header>
 
@@ -75,21 +15,18 @@ Echo.private('users.{{ Auth()->User()->id }}')
 
         {{-- chatlist  --}}
 
-        <ul x-data="{ query: @entangle('query') }" class="p-2 grid w-full spacey-y-2">
+        <ul x-data="{ conversation_id: $wire.entangle('conversation_id') }" class="p-2 grid w-full spacey-y-2">
 
             @if ($conversations)
-
                 @foreach ($conversations as $key => $conversation)
-                    {{-- <div x-data="{ error: null }" x-on:click.away="error = null"> --}}
                     <li id="conversation-{{ $conversation->id }}" wire:key="{{ $conversation->id }}"
                         class="my-1 py-3 hover:bg-gray-50 rounded-xl transition-colors duration-150 flex gap-4 relative w-full cursor-pointer px-2 {{ $conversation->id == $conversation_id ? 'bg-gray-100/70' : '' }}">
 
-                        <aside class="grid grid-cols-12 w-full items-center justify-center">
+                        <aside class="grid border-b grid-cols-12 w-full items-center justify-center">
 
                             <a wire:click="selectConversation({{ $conversation->id }})"
                                 href="{{ route('chat', $conversation->id) }}"
-                                class="col-span-11 border-b pb-2 border-gray-200 relative overflow-hidden truncate leading-5 w-full flex-nowrap p-1">
-
+                                class="col-span-11 pb-2 border-gray-200 relative overflow-hidden truncate leading-5 w-full flex-nowrap p-1">
 
                                 {{-- name, avatar, and date  --}}
                                 <div class="flex justify-between items-center mb-2">
@@ -99,17 +36,19 @@ Echo.private('users.{{ Auth()->User()->id }}')
                                         <x-avatar class="shrink-0 mx-4 md:mx-0 h-6 w-6 lg:w-9 lg:h-9" />
                                         @if ($conversation->messages?->last()?->receiver_id == auth()->id())
                                             @if ($conversation->isLastMessageReadByUser())
-                                                <h6 class="truncate font-[100] tracking-wider text-gray-900">
-                                                    {{ $conversation->getReceiver()->name }}
+                                                <h6
+                                                    class="truncate font-[100] text-sm lg:text-base tracking-wider text-gray-900">
+                                                    {{ $conversation->getConversationUser()->name }}
                                                 </h6>
                                             @else
-                                                <h6 class="truncate font-bold tracking-wider text-gray-900">
-                                                    {{ $conversation->getReceiver()->name }}
+                                                <h6
+                                                    class="truncate font-bold text-sm lg:text-base tracking-wider text-gray-900">
+                                                    {{ $conversation->getConversationUser()->name }}
                                                 </h6>
                                             @endif
                                         @else
-                                            <h6 class="truncate font-[100] text-gray-900">
-                                                {{ $conversation->getReceiver()->name }}
+                                            <h6 class="truncate font-[100] text-sm lg:text-base text-gray-900">
+                                                {{ $conversation->getConversationUser()->name }}
                                             </h6>
                                         @endif
                                     </span>
@@ -128,7 +67,8 @@ Echo.private('users.{{ Auth()->User()->id }}')
                                         @if ($conversation->isLastMessageReadByUser())
                                             {{-- The Message --}}
                                             <p class="grow truncate text-sm ml-4 md:ml-0 text-gray-500 font-[100]">
-                                                You: {{ $conversation->messages?->last()?->body ?? ' ' }}
+                                                <span class="mr-1">You:</span>
+                                                {{ $conversation->messages?->last()?->body ?? ' ' }}
                                             </p>
 
                                             {{-- double tick  --}}
@@ -143,7 +83,8 @@ Echo.private('users.{{ Auth()->User()->id }}')
                                         @else
                                             {{-- The Message --}}
                                             <p class="grow truncate text-sm ml-4 md:ml-0 text-gray-500 font-[100]">
-                                                You: {{ $conversation->messages?->last()?->body ?? ' ' }}
+                                                <span class="mr-1">You:</span>
+                                                {{ $conversation->messages?->last()?->body ?? ' ' }}
                                             </p>
 
                                             {{-- single tick  --}}
@@ -199,24 +140,9 @@ Echo.private('users.{{ Auth()->User()->id }}')
                                         </button>
                                     </x-slot>
 
+                                    {{-- Options --}}
                                     <x-slot name="content">
                                         <div class="w-full p-1">
-                                            {{-- <button
-                                                class="items-center gap-3 flex w-full px-4 py-2 text-left text-sm leading-5 text-gray-500 hover:bg-gray-100 transition-all duration-150 ease-in-out focus:outline-none focus:bg-gray-100">
-                                                <span>
-                                                    <svg xmlns="http://www.w3.org/2000/svg" width="16"
-                                                        height="16" fill="currentColor" class="bi bi-person-circle"
-                                                        viewBox="0 0 16 16">
-                                                        <path d="M11 6a3 3 0 1 1-6 0 3 3 0 0 1 6 0z" />
-                                                        <path fill-rule="evenodd"
-                                                            d="M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8zm8-7a7 7 0 0 0-5.468 11.37C3.242 11.226 4.805 10 8 10s4.757 1.225 5.468 2.37A7 7 0 0 0 8 1z" />
-                                                    </svg>
-                                                </span>
-
-                                                View Profile
-
-                                            </button> --}}
-
                                             <button onclick="confirm('Are you sure?')||event.stopImmediatePropagation()"
                                                 wire:click="deleteByUser('{{ encrypt($conversation->id) }}')"
                                                 class="items-center gap-3 flex w-full px-4 py-2 text-left text-sm leading-5 text-gray-500 hover:bg-gray-100 transition-all duration-150 ease-in-out focus:outline-none focus:bg-gray-100">
@@ -238,10 +164,6 @@ Echo.private('users.{{ Auth()->User()->id }}')
                             </div>
                         </aside>
                     </li>
-                    {{-- <div style="display:none" x-show="error" class="text-red-500">
-                            An error occurred. Please try again. (Optional: Provide a link to report the issue)
-                        </div> --}}
-                    {{-- </div> --}}
                 @endforeach
             @else
             @endif
@@ -249,4 +171,38 @@ Echo.private('users.{{ Auth()->User()->id }}')
         </ul>
 
     </main>
+
+    @if (session()->has('deleteChatSuccess'))
+        @foreach (session('deleteChatSuccess') as $message)
+            <div x-data="{ show: true }" x-init="setTimeout(() => {
+                show = false;
+                $wire.removeSuccessMessage('deleteChatSuccess', '{{ $loop->index }}');
+            }, 1500)" x-show="show" x-transition:enter="fade-enter"
+                x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100"
+                x-transition:leave="fade-leave-active" x-transition:leave-start="opacity-100"
+                x-transition:leave-end="opacity-0"
+                class="fixed left-6 bottom-6 flex items-center bg-rose-300 text-rose-950 rounded-sm text-sm sm:text-md font-bold px-4 py-3"
+                role="alert">
+
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" class="fill-current w-4 h-4 mr-2">
+                    <path fill-rule="evenodd"
+                        d="M18 10a8 8 0 1 1-16 0 8 8 0 0 1 16 0Zm-8-5a.75.75 0 0 1 .75.75v4.5a.75.75 0 0 1-1.5 0v-4.5A.75.75 0 0 1 10 5Zm0 10a1 1 0 1 0 0-2 1 1 0 0 0 0 2Z"
+                        clip-rule="evenodd" />
+                </svg>
+
+
+                <p>{{ $message }}</p>
+            </div>
+        @endforeach
+    @endif
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+
+            Echo.private('users.{{ Auth()->user()->id }}')
+                .notification((notification) => {
+                    Livewire.emit('refreshChatList', notification);
+                });
+        });
+    </script>
 </div>

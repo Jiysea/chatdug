@@ -1,5 +1,6 @@
 <?php
 
+use App\Events\ConversationSelected;
 use App\Http\Controllers\ProfileController;
 use App\Http\Livewire\Chat;
 use App\Http\Livewire\Index;
@@ -43,6 +44,9 @@ require __DIR__ . '/auth.php';
 Route::middleware('auth')->group(function () {
 
     Route::get('/chat', Index::class)->name('index');
+    // Route::get('/chat{query}', function () {
+    //     ConversationSelected::dispatch(Chat::class);
+    // });
     Route::get('/chat/{query}', Chat::class)->name('chat');
 
     Route::get('/users', Users::class)->name('users');
